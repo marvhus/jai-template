@@ -2,4 +2,4 @@ main :: () {
 	print("Hello, World!\n");
 }
 
-#include "Basic";
+#import "Basic";
