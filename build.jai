@@ -1,33 +1,66 @@
+#!/usr/bin/env jai
+
 #run {
-	set_build_options_dc(.{do_output=false});
+    args := get_build_options().compile_time_command_line;
+    path := "bin";
+    name := "exec";
 
-	workspace := compiler_create_workspace("Template Workspace");
-	if !workspace {
-		log_error("Failed to create workspace.\n");
-		return;
-	}
+    build_project(path, name);
 
-	// Create needed directories if it doesn't exist
-	make_directory_if_it_does_not_exist("bin");
-	make_directory_if_it_does_not_exist("modules");
+    if args.count > 0 && args[0] == "run" {
+        run_args := args;
+        run_args.count -= 1;
+        run_args.data += 1;
+        run_project(sprint("./%/%", path, name), run_args);
+    }
 
-	// configure build options
-	options := get_build_options(workspace);
+    set_build_options_dc(.{do_output=false});
+}
 
-	options.output_executable_name = "exec";
-	options.output_path = "bin/";
+run_project :: (path: string, args: []string) {
+    new_args: [..]string;
+    array_add(*new_args, path);
+    array_add(*new_args, ..args);
+    log("===== RUNNING: % =====\n", join(..new_args, separator=" "));
+    run_command(..new_args);
+}
 
-	import_path: [..]string;
-	array_add(*import_path, tprint("modules/"));
-	array_add(*import_path, ..options.import_path);
-	options.import_path = import_path;
+build_project :: (path: string, name: string) {
+    log("===== COMPILING =====");
+    workspace := compiler_create_workspace("Template Workspace");
+    if !workspace {
+        log_error("Failed to create workspace.\n");
+        return;
+    }
 
-	set_build_options(options, workspace);
+    // Create needed directories if it doesn't exist
+    make_directory_if_it_does_not_exist(path);
+    make_directory_if_it_does_not_exist("modules");
 
-	// Add file to compile
-	add_build_file(tprint("src/main.jai"), workspace);
+    // configure build options
+    opts := get_build_options(workspace);
+    opts.output_executable_name = name;
+    opts.output_path = path;
+    {
+        import_path: [..]string;
+        array_add(*import_path, "modules/");
+        array_add(*import_path, ..opts.import_path);
+        opts.import_path = import_path;
+    }
+    set_build_options(opts, workspace);
+
+    compiler_begin_intercept(workspace);
+    add_build_file("src/main.jai", workspace);
+    while true {
+        msg := compiler_wait_for_message();
+        if !msg break;
+        if msg.kind == .COMPLETE break;
+    }
+    compiler_end_intercept(workspace);
 }
 
 #import "File";
 #import "Basic";
+#import "String";
+#import "Process";
 #import "Compiler";

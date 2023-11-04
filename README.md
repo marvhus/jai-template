@@ -1,22 +1,31 @@
 # Jai Template
-A Template Repository for Jai
+A Template Repository for my Jai projects.
 
+## Compiler Version
 ```console
 $ jai -version
-Version: beta 0.1.074b, built on 26 August 2023.
+Version: beta 0.1.076, built on 22 October 2023.
 ```
 
-# Build
+## Instructions
+
+### Build
+<details>
+
 ```console
-$ jai build.jai
+$ ./build.jai
 ```
+The compiler will then generate a binary in the `bin` directory.
+</details>
 
-# Run
+
+### Build & Run
+<details>
+
 ```console
-$ ./bin/exec
+$ ./build.jai - run
 ```
+You can then pass the arguments you want to give to the executable after the `run` argument.  
+For example: `./build.jai - run foo bar baz`.
+</details>
 
-# Build & Run
-```
-$ ./build_and_run.sh
-```
